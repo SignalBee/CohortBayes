@@ -1,0 +1,46 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools ~=63.2.0", "setuptools-scm"]
+
+[project]
+name = "cohortbayes"
+description = "Baysean model for cohort retention analysis"
+dependencies = [
+  "numpy",
+  "pandas",
+  "pymc",
+  "pymc_bart"
+]
+requires-python = ">=3.8"
+authors = [
+  { name="Ryan Duecker", email="ryan.duecker@yahoo.com" },
+]
+readme = "README.md"
+license = {file = 'LICENSE'}
+keywords = ["Model","Marketing","Bayes","Performance","Data Science"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+testing = ["pytest"]
+linting = ["flake8", "pylint"]
+dev = ["yapf","flake8","pylint","pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {file = "src/cohortbayes/VERSION"}
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.yapf]
+based_on_style = 'yapf'
+indent_width = 2
+blank_lines_around_top_level_definition = 1
+blank_line_before_nested_class_or_def = false
