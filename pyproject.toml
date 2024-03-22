@@ -9,7 +9,11 @@ dependencies = [
   "numpy",
   "pandas",
   "pymc",
-  "pymc_bart"
+  "pymc_bart",
+  "scikit-learn",
+  "seaborn",
+  "scipy",
+  "matplotlib"
 ]
 requires-python = ">=3.8"
 authors = [
