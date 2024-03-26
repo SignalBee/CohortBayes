@@ -1,15 +1,10 @@
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, List
 import numpy as np
 import pandas as pd
 from scipy.special import logit
 from sklearn.preprocessing import MaxAbsScaler, LabelEncoder
 
-standard_column_names = {
-  "cohort": "cohort",
-  "period": "period",
-  "cohort_age":"cohort_age"
-}
-
+standard_column_names = {"cohort": "cohort", "period": "period", "cohort_age": "cohort_age"}
 
 class Data:
   def __init__(self, data: pd.DataFrame) -> None:
@@ -71,12 +66,16 @@ class DataLoad:
   def load(self) -> None:
     self.data = pd.read_csv(self.path, parse_dates=["cohort", "period"])
 
+  def prepare(self, split_date: str) -> List[Data]:
+    self.add_features()
+    return self.splitter(split_date=split_date)
+
   def add_features(self):
     self.data["month"] = self.data["period"].dt.strftime("%m").astype(int)
     self.data["cohort_month"] = (self.data["cohort"].dt.strftime("%m").astype(int))
     self.data["period_month"] = (self.data["period"].dt.strftime("%m").astype(int))
 
-  def splitter(self, split_date: str) -> Data:
+  def splitter(self, split_date: str) -> List[Data]:
     self.data = self.data[self.data['cohort_age'] > 0].reset_index(drop=True)
     train = self.data[self.data['period'] <= split_date]
     test = self.data[self.data['period'] > split_date]

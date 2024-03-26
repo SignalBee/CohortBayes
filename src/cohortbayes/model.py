@@ -8,7 +8,6 @@ from pymc_bart.split_rules import ContinuousSplitRule, SubsetSplitRule
 from .diagnostics import ModelDiagnostic
 from .dataops import Data
 
-
 class BayesModel(ModelDiagnostic):
   def __init__(self, training_data: Data, add_eps: bool, rng: Optional[int] = None):
     self.training_data = training_data
@@ -34,27 +33,27 @@ class BayesModel(ModelDiagnostic):
       prior_age_cohort_age_interaction = pm.Normal(name="prior_age_cohort_age_interaction", mu=0, sigma=1)
 
       # PARAMETERIZATION
-      mu = pmb.BART(name="mu", X=x, Y=self.training_data.retention_logit, m=100, response="mix", split_rules=[ContinuousSplitRule(), ContinuousSplitRule(), SubsetSplitRule()], dims="obs",)
+      mu = pmb.BART(name="mu", X=x, Y=self.training_data.retention_logit, m=100, response="mix", split_rules=[ContinuousSplitRule(), ContinuousSplitRule(), SubsetSplitRule()], dims="obs")
       p = pm.Deterministic(name="p", var=pm.math.invlogit(mu), dims="obs")
       if self.add_eps:
         eps = np.finfo(float).eps
         p = np.where(p == 0, eps, p)
         p = np.where(p == 1, 1 - eps, p)
       lam_log = pm.Deterministic(
-        name="lam_log",
-        var=intercept + prior_age_scaled * age_scaled + prior_cohort_age_scaled * cohort_age_scaled + prior_age_cohort_age_interaction * age_scaled * cohort_age_scaled,
-        dims="obs",
-      )
+          name="lam_log", var=intercept + prior_age_scaled * age_scaled + prior_cohort_age_scaled * cohort_age_scaled + prior_age_cohort_age_interaction * age_scaled * cohort_age_scaled, dims="obs")
       lam = pm.Deterministic(name="lam", var=pm.math.exp(lam_log), dims="obs")
 
       # LIKELIHOOD
-      active_customer_count_estimated = pm.Binomial( name="n_active_users_estimated", n=customer_count, p=p, observed=active_customer_count, dims="obs",)
-      x = pm.Gamma(name="revenue_estimated", alpha=active_customer_count_estimated + eps, beta=lam, observed=revenue, dims="obs",)
+      active_customer_count_estimated = pm.Binomial(name="n_active_users_estimated", n=customer_count, p=p, observed=active_customer_count, dims="obs")
+      x = pm.Gamma(name="revenue_estimated", alpha=active_customer_count_estimated + eps, beta=lam, observed=revenue, dims="obs")
       mean_revenue_per_active_user = pm.Deterministic(name="mean_revenue_per_active_user", var=(1 / lam), dims="obs")
       pm.Deterministic(name="mean_revenue_per_user", var=p * mean_revenue_per_active_user, dims="obs")
 
   def visulaize(self):
     pm.model_to_graphviz(model=self.model)
 
-  def train(self):
-    return
+  def fit(self):
+    with self.model:
+      idata = pm.sample(draws=2_000, chains=5, random_seed=rng)
+      self.posterior_predictive = pm.sample_posterior_predictive(trace=idata, random_seed=rng)
+    return self.posterior_predictive
